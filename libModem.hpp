@@ -34,6 +34,8 @@ namespace Reimu {
 	Kanna::Logging log;
 	std::vector<uint8_t> RawData;
 
+
+
 	void SerialPortListener();
 	void ProcessData(std::string linedata);
     public:
@@ -50,6 +52,11 @@ namespace Reimu {
 	    LTE = 0x100000
 	};
 
+	struct CallBackCollection {
+	    void (*SignalChange)(struct SignalValues *signal, struct SignalValues *signal_hdr, void *userp) = NULL;
+	    void (*CallStatus)(int direction, std::string number, void *userp) = NULL;
+	};
+
 	struct SignalValues {
 	    int16_t dBm = -32767;
 	    uint8_t CSQ = 255;
@@ -61,9 +68,19 @@ namespace Reimu {
 	ModemModes Mode = General;
 	struct SignalValues Signal;
 	struct SignalValues Signal_HDR;
+
 	AccessTechnologies SupportedAccessTechnology = Unknown;
 	AccessTechnologies CurrentAccessTechnology = Unknown;
 
+	std::vector<uint16_t> Calls;
+	std::string CallingNumber;
+
+	std::unordered_map<int, std::vector<uint8_t>> Buffers;
+
+	void (*OverridedHandler)(std::string linedata, Reimu::libModem *ctx) = NULL;
+	CallBackCollection CallBacks;
+
+	libModem(){};
 	libModem(ModemModes mode, std::string tty_device);
 
 	void Dispatch();
